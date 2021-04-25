@@ -100,6 +100,9 @@ class CaptionsDataset(Dataset):
             print("Unknown split, use 'train' or 'val'")
             sys.exit()
 
+        self.data_path = data_path
+        self.split = split
+
         dataset, categories = load_or_setup_dataset(split=split)
         self.dataset = dataset
         self.categories = categories
@@ -130,20 +133,27 @@ class CaptionsDataset(Dataset):
             self.tokenizer = None
             print("No tokenizer provided, you will need to provide one later through the tokenize method!")
 
-    def tokenize(self, tokenizer):
+    def tokenize(self, tokenizer, load_tokenized=False):
         self.input_ids = []
         self.attention_masks = []
         self.entries = []
         self.tokenizer = tokenizer
 
-        for item in self.dataset:
-            pre_control_codes_string=""
-            for category in item['categories']:
-                pre_control_codes_string+="<CTRL:"+category.replace(" ","_")+">"
-            x = tokenizer(pre_control_codes_string+'<|startoftext|>'+item['caption']+'<|endoftext|>', truncation=True, max_length=256, padding="max_length")
-            self.input_ids += torch.tensor([x.input_ids])
-            self.attention_masks += torch.tensor([x.attention_mask])
-            self.entries += [{"labels": torch.tensor([x.input_ids]), "input_ids": torch.tensor([x.input_ids]), "attention_mask": torch.tensor([x.attention_mask])}]               
+        if load_saved and os.path.isfile(os.path.join(self.data_path, "entries_"+self.split+".pt")):
+            print("Loading pretokenized dataset! ("+self.split+")")
+            self.entries = torch.load(os.path.join(self.data_path, "entries_"+self.split+".pt"))
+        else:
+            print("Tokenizing dataset! ("+self.split+")")
+            for item in self.dataset:
+                pre_control_codes_string=""
+                for category in item['categories']:
+                    pre_control_codes_string+="<CTRL:"+category.replace(" ","_")+">"
+                x = tokenizer(pre_control_codes_string+'<|startoftext|>'+item['caption']+'<|endoftext|>', truncation=True, max_length=256, padding="max_length")
+                self.input_ids += torch.tensor([x.input_ids])
+                self.attention_masks += torch.tensor([x.attention_mask])
+                self.entries += [{"labels": torch.tensor([x.input_ids]), "input_ids": torch.tensor([x.input_ids]), "attention_mask": torch.tensor([x.attention_mask])}]
+            print("Saving tokenized dataset! ("+self.split+")")
+            torch.save(self.entries, os.path.join(self.data_path, "entries_"+self.split+".pt"))       
 
     def __len__(self):
         return len(self.input_ids)
