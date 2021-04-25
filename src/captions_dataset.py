@@ -156,7 +156,7 @@ class CaptionsDataset(Dataset):
             torch.save(self.entries, os.path.join(self.data_path, "entries_"+self.split+".pt"))       
 
     def __len__(self):
-        return len(self.input_ids)
+        return len(self.entries)
 
     def __getitem__(self, i):
         # We’ll pad at the batch level.
