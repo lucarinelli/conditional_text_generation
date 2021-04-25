@@ -130,13 +130,13 @@ class CaptionsDataset(Dataset):
             self.tokenizer = None
             print("No tokenizer provided, you will need to provide one later through the tokenize method!")
 
-    def tokenize(tokenizer):
+    def tokenize(self, tokenizer):
         self.input_ids = []
         self.attention_masks = []
         self.entries = []
         self.tokenizer = tokenizer
 
-        for item in dataset:
+        for item in self.dataset:
             pre_control_codes_string=""
             for category in item['categories']:
                 pre_control_codes_string+="<CTRL:"+category.replace(" ","_")+">"
