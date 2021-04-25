@@ -140,7 +140,7 @@ class CaptionsDataset(Dataset):
             pre_control_codes_string=""
             for category in item['categories']:
                 pre_control_codes_string+="<CTRL:"+category.replace(" ","_")+">"
-            x = tokenizer(pre_control_codes_string+" "+item['caption'], padding=True)
+            x = tokenizer(pre_control_codes_string+'<|startoftext|>'+item['caption']+'<|endoftext|>', truncation=True, max_length=256, padding="max_length")
             self.input_ids += torch.tensor([x.input_ids])
             self.attention_masks += torch.tensor([x.attention_mask])
             self.entries += [{"labels": torch.tensor([x.input_ids]), "input_ids": torch.tensor([x.input_ids]), "attention_mask": torch.tensor([x.attention_mask])}]               
