@@ -172,7 +172,7 @@ from pathlib import Path
 
 max_length=512
 
-class CaptionDataset(Dataset):
+class CaptionsDataset(Dataset):
     def __init__(self, evaluate: bool = False):
         tokenizer = ByteLevelBPETokenizer(
             os.path.join(DATA_PATH,"our_ctrl-vocab.json"),
@@ -202,9 +202,9 @@ class CaptionDataset(Dataset):
         return self.entries[i]
 
 
-train_dataset = CaptionDataset()
+train_dataset = CaptionsDataset()
 
-validation_dataset = CaptionDataset(True)
+validation_dataset = CaptionsDataset(True)
 
 print(train_dataset[0])
 
