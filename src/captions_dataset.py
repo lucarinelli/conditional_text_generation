@@ -139,7 +139,7 @@ class CaptionsDataset(Dataset):
         self.entries = []
         self.tokenizer = tokenizer
 
-        if load_saved and os.path.isfile(os.path.join(self.data_path, "entries_"+self.split+".pt")):
+        if load_tokenized and os.path.isfile(os.path.join(self.data_path, "entries_"+self.split+".pt")):
             print("Loading pretokenized dataset! ("+self.split+")")
             self.entries = torch.load(os.path.join(self.data_path, "entries_"+self.split+".pt"))
         else:
