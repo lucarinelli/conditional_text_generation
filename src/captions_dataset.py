@@ -120,7 +120,7 @@ class CaptionsDataset(Dataset):
         print(self.control_codes)
 
         print("Writing txt")
-        write_captions_txt(self.dataset, split=split)
+        write_captions_txt(self.dataset, data_path=data_path, split=split)
 
         self.input_ids = []
         self.attention_masks = []
