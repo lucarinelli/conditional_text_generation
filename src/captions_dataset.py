@@ -103,7 +103,7 @@ class CaptionsDataset(Dataset):
         self.data_path = data_path
         self.split = split
 
-        dataset, categories = load_or_setup_dataset(split=split)
+        dataset, categories = load_or_setup_dataset(data_path=data_path, split=split)
         self.dataset = dataset
         self.categories = categories
 
