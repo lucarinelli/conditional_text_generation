@@ -151,7 +151,7 @@ def process_chunk(parameters):
     captions_array_for_json = []
     for item in chunk_items:
         if use_control_codes:
-            if use_control_codes_powerset:
+            if control_codes_powerset:
                 control_codes_combinations = powerset(item['categories'], max_control_codes_per_caption)
             else:
                 control_codes_combinations = [item['categories']]
@@ -196,7 +196,19 @@ def load_our_dataset(exp_pars, data_path=DATA_PATH):
 
     chunk_size = exp_pars.chunk_size_json_mp
     write_json_chunks(dataset_train, "train", data_path, chunk_size, exp_pars.use_control_codes, exp_pars.control_codes_powerset, exp_pars.max_control_codes_per_caption, exp_pars.control_codes_type)
-    write_json_chunks(dataset_val, "val", data_path, chunk_size)
+    write_json_chunks(dataset_val, "val", data_path, chunk_size, exp_pars.use_control_codes, exp_pars.control_codes_powerset, exp_pars.max_control_codes_per_caption, exp_pars.control_codes_type)
 
     dataset_train, dataset_val = load_dataset('json', data_files={'train': glob.glob(os.path.join(data_path, 'captions_train_*.json')), 'val': glob.glob(os.path.join(data_path, '/captions_val_*.json'))}, split=['train', 'val'], field="data")
+    
+    print("Post-processed dataset has "+str(len(dataset_train))+" train elements and "+str(len(dataset_val))+" validation elements")
+
+    if exp_pars.limited_run: # shuffle and cut the datasets
+        dataset_train = dataset_train.shuffle(exp_pars.random_seed).select(range(exp_pars.max_train_set_len))
+        dataset_val = dataset_val.shuffle(exp_pars.random_seed).select(range(exp_pars.max_val_set_len))
+        print("We take only a small part of that: "+str(len(dataset_train))+" train elements and "+str(len(dataset_val))+" validation elements")
+    else: # just shuffle them
+        dataset_train = dataset_train.shuffle(exp_pars.random_seed)
+        dataset_val = dataset_val.shuffle(exp_pars.random_seed)
+        print("Train elements: "+str(len(dataset_train))+"\nValidation elements: "+str(len(dataset_val)))
+
     return dataset_train, dataset_val
