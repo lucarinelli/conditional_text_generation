@@ -2,6 +2,7 @@
 Everything related COCO captions loading and preprocessing
 '''
 
+from enum import Enum
 import os
 import sys
 import subprocess  # to run sh commands
@@ -16,6 +17,10 @@ import multiprocessing as mp
 
 DATA_PATH="./data"
 
+class DatasetType(Enum):
+    TRAIN = 1
+    EVAL = 2
+
 def download_annotations_dataset(data_path=DATA_PATH):
     # download only if don't have it already
     if not os.path.isdir(os.path.join(data_path,"annotations")):
@@ -25,7 +30,7 @@ def download_annotations_dataset(data_path=DATA_PATH):
         subprocess.run(["wget","-P", data_path, "http://images.cocodataset.org/annotations/annotations_trainval2017.zip"])
         subprocess.run(["unzip", "-d", data_path, os.path.join(data_path,"annotations_trainval2017.zip")])
 
-def map_and_join_dataset(data_instances, data_captions, use_supercategories=True, use_categories=False):
+def map_and_join_dataset(data_instances, data_captions, use_supercategories=True, use_categories=False, captions_per_image_id = 5):
     if not use_categories and not use_supercategories:
         print("One of categories and supercategories has to be used!")
         sys.exit()
@@ -60,8 +65,8 @@ def map_and_join_dataset(data_instances, data_captions, use_supercategories=True
     
 
     for image_id, captions in captions_data_dict.items():
-        if len(captions) >= 5:
-            discarded += max(0, len(captions) - 5)
+        if len(captions) >= captions_per_image_id:
+            discarded += max(0, len(captions) - captions_per_image_id)
             captions_data_dict_filtered[image_id] = dict(list(captions.items())[0:4])
         else:
             discarded += len(captions)
@@ -96,7 +101,7 @@ def map_and_join_dataset(data_instances, data_captions, use_supercategories=True
     print("There are "+str(no_category_counter)+" captions without a category")
     return dataset, references_dict, list(control_codes_dict.keys())
 
-def load_or_setup_dataset(data_path=DATA_PATH, split='train', use_supercategories=True, use_categories=False, force_dataset_update=False):
+def load_or_setup_dataset(data_path=DATA_PATH, split='train', use_supercategories=True, use_categories=False, force_dataset_update=False, captions_per_image_id = 5):
     if not split in ['train', 'val']:
         print("Unknown split: "+split)
         sys.exit()
@@ -117,7 +122,7 @@ def load_or_setup_dataset(data_path=DATA_PATH, split='train', use_supercategorie
         with open(os.path.join(data_path,"annotations/captions_"+split+"2017.json"), "r") as read_file:
             data_captions = json.load(read_file)
 
-        dataset, references_dict, control_codes = map_and_join_dataset(data_instances, data_captions, use_supercategories, use_categories)
+        dataset, references_dict, control_codes = map_and_join_dataset(data_instances, data_captions, use_supercategories, use_categories, captions_per_image_id)
 
         with open(os.path.join(data_path,"control_codes_"+split+".json"), 'w') as outfile:
             json.dump(control_codes, outfile)
@@ -176,9 +181,9 @@ def write_json_chunks(dataset, split, data_path, chunk_size, use_control_codes, 
     pool = mp.Pool(processes=8)
     pool.map(process_chunk, [(chunk_n, chunk_items, data_path, split, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type) for chunk_n, chunk_items in enumerate(chunks)])
 
-def load_our_dataset(exp_pars, data_path=DATA_PATH):
-    dataset_train, _, categories = load_or_setup_dataset(data_path=data_path, split="train", use_supercategories=exp_pars.use_supercategories, use_categories=exp_pars.use_categories, force_dataset_update=exp_pars.force_dataset_update)
-    dataset_val, references_validation, _ = load_or_setup_dataset(data_path=data_path, split="val", use_supercategories=exp_pars.use_supercategories, use_categories=exp_pars.use_categories, force_dataset_update=exp_pars.force_dataset_update)
+def get_dataset(exp_pars, data_path=DATA_PATH):
+    dataset_train, _, categories = load_or_setup_dataset(data_path=data_path, split="train", use_supercategories=exp_pars.use_supercategories, use_categories=exp_pars.use_categories, force_dataset_update=exp_pars.force_dataset_update, captions_per_image_id=exp_params.captions_per_image_id)
+    dataset_val, references_validation, _ = load_or_setup_dataset(data_path=data_path, split="val", use_supercategories=exp_pars.use_supercategories, use_categories=exp_pars.use_categories, force_dataset_update=exp_pars.force_dataset_update, captions_per_image_id=exp_params.captions_per_image_id)
 
     print("There are "+str(len(dataset_train))+" captions considered in total (train)")
     print("There are "+str(len(dataset_val))+" captions considered in total (val)")
@@ -211,4 +216,36 @@ def load_our_dataset(exp_pars, data_path=DATA_PATH):
         dataset_val = dataset_val.shuffle(exp_pars.random_seed)
         print("Train elements: "+str(len(dataset_train))+"\nValidation elements: "+str(len(dataset_val)))
 
+    
     return dataset_train, dataset_val, control_codes, references_validation
+
+def get_tokenizer(exp_pars, control_codes):
+    from transformers import GPT2TokenizerFast
+
+    tokenizer = GPT2TokenizerFast.from_pretrained(exp_pars.model)
+    tokenizer.pad_token = tokenizer.eos_token
+    print("Tokenizer before added special tokens "+str(len(tokenizer)))
+
+    if exp_pars.use_control_codes and exp_pars.control_codes_type == "special_token":
+        special_tokens_dict = {'additional_special_tokens': control_codes}
+        num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
+        print("added "+str(num_added_toks)+" tokens to the pretrained tokenizer")
+
+    return tokenizer
+
+def encode(examples, tokenizer):
+    encoded = tokenizer(examples['caption'], truncation=True, max_length=64, padding="max_length")
+    encoded['labels'] = encoded['input_ids']
+    encoded['image_id'] = examples['image_id']
+    return encoded
+
+def encode_dataset(dataset, tokenizer): 
+    return dataset.map(lambda x: encode(x, tokenizer), batched=True)
+
+def encode_and_format_dataset(dataset, dataset_Type: DatasetType, tokenizer):
+    encoded = encode_dataset(dataset, tokenizer)
+    if isinstance(DatasetType.TRAIN, dataset_Type):
+        encoded.set_format(type='torch', columns=['input_ids', 'attention_mask', 'labels'])
+    elif isinstance(DatasetType.eval, dataset_Type):
+        encoded.set_format(type='torch', columns=['input_ids', 'attention_mask', 'labels', 'image_id'])
+    return encoded
