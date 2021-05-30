@@ -177,8 +177,8 @@ def write_json_chunks(dataset, split, data_path, chunk_size, use_control_codes, 
     pool.map(process_chunk, [(chunk_n, chunk_items, data_path, split, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type) for chunk_n, chunk_items in enumerate(chunks)])
 
 def load_our_dataset(exp_pars, data_path=DATA_PATH):
-    dataset_train, _, categories = load_or_setup_dataset(data_path=data_path, split="train")
-    dataset_val, references, _ = load_or_setup_dataset(data_path=data_path, split="val")
+    dataset_train, _, categories = load_or_setup_dataset(data_path=data_path, split="train", use_supercategories=exp_pars.use_supercategories, use_categories=exp_pars.use_categories, force_dataset_update=exp_pars.force_dataset_update)
+    dataset_val, references_validation, _ = load_or_setup_dataset(data_path=data_path, split="val", use_supercategories=exp_pars.use_supercategories, use_categories=exp_pars.use_categories, force_dataset_update=exp_pars.force_dataset_update)
 
     print("There are "+str(len(dataset_train))+" captions considered in total (train)")
     print("There are "+str(len(dataset_val))+" captions considered in total (val)")
@@ -186,8 +186,8 @@ def load_our_dataset(exp_pars, data_path=DATA_PATH):
     print("The following "+str(len(categories))+" categories are present in the dataset:")
     print(categories)
 
+    control_codes = []
     if exp_pars.use_control_codes and exp_pars.control_codes_type == "special_token":
-        control_codes = []
         for category in categories:
             control_codes += ["<CTRL:"+category.replace(" ","_")+">"]
 
@@ -198,7 +198,7 @@ def load_our_dataset(exp_pars, data_path=DATA_PATH):
     write_json_chunks(dataset_train, "train", data_path, chunk_size, exp_pars.use_control_codes, exp_pars.control_codes_powerset, exp_pars.max_control_codes_per_caption, exp_pars.control_codes_type)
     write_json_chunks(dataset_val, "val", data_path, chunk_size, exp_pars.use_control_codes, exp_pars.control_codes_powerset, exp_pars.max_control_codes_per_caption, exp_pars.control_codes_type)
 
-    dataset_train, dataset_val = load_dataset('json', data_files={'train': glob.glob(os.path.join(data_path, 'captions_train_*.json')), 'val': glob.glob(os.path.join(data_path, '/captions_val_*.json'))}, split=['train', 'val'], field="data")
+    dataset_train, dataset_val = load_dataset('json', data_files={'train': glob.glob(os.path.join(data_path, 'captions_train_*.json')), 'val': glob.glob(os.path.join(data_path, 'captions_val_*.json'))}, split=['train', 'val'], field="data")
     
     print("Post-processed dataset has "+str(len(dataset_train))+" train elements and "+str(len(dataset_val))+" validation elements")
 
@@ -211,4 +211,4 @@ def load_our_dataset(exp_pars, data_path=DATA_PATH):
         dataset_val = dataset_val.shuffle(exp_pars.random_seed)
         print("Train elements: "+str(len(dataset_train))+"\nValidation elements: "+str(len(dataset_val)))
 
-    return dataset_train, dataset_val
+    return dataset_train, dataset_val, control_codes, references_validation
