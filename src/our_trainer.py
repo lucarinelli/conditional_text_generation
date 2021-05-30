@@ -346,7 +346,7 @@ class OurTrainer(Trainer):
       
         # Metrics!
         if self.compute_metrics is not None and all_preds is not None and all_labels is not None:
-            metrics = self.compute_metrics(EvalPrediction(predictions=all_preds, label_ids=all_labels), all_image_ids)
+            metrics = self.compute_metrics(EvalPrediction(predictions=all_preds, label_ids=all_labels), all_image_ids, self.tokenizer, self.args.references)
         else:
             metrics = {}
 
@@ -363,3 +363,18 @@ class OurTrainer(Trainer):
 
         return EvalLoopOutput(predictions=all_preds, label_ids=all_labels, metrics=metrics, num_samples=num_samples)
 
+
+
+def compute_metrics(pred, image_ids, tokenizer, references):
+    preds = pred.predictions
+    metric = datasets.load_metric('sacrebleu')
+
+    preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
+
+    references_local_list = [references[image_id.item()] for image_id in image_ids]
+
+    final_score = metric.compute(predictions=preds, references=references_local_list)
+    
+    return {
+        'bleu': final_score
+    }
