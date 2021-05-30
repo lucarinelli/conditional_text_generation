@@ -182,8 +182,8 @@ def write_json_chunks(dataset, split, data_path, chunk_size, use_control_codes, 
     pool.map(process_chunk, [(chunk_n, chunk_items, data_path, split, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type) for chunk_n, chunk_items in enumerate(chunks)])
 
 def get_dataset(exp_pars, data_path=DATA_PATH):
-    dataset_train, _, categories = load_or_setup_dataset(data_path=data_path, split="train", use_supercategories=exp_pars.use_supercategories, use_categories=exp_pars.use_categories, force_dataset_update=exp_pars.force_dataset_update, captions_per_image_id=exp_params.captions_per_image_id)
-    dataset_val, references_validation, _ = load_or_setup_dataset(data_path=data_path, split="val", use_supercategories=exp_pars.use_supercategories, use_categories=exp_pars.use_categories, force_dataset_update=exp_pars.force_dataset_update, captions_per_image_id=exp_params.captions_per_image_id)
+    dataset_train, _, categories = load_or_setup_dataset(data_path=data_path, split="train", use_supercategories=exp_pars.use_supercategories, use_categories=exp_pars.use_categories, force_dataset_update=exp_pars.force_dataset_update, captions_per_image_id=exp_pars.captions_per_image_id)
+    dataset_val, references_validation, _ = load_or_setup_dataset(data_path=data_path, split="val", use_supercategories=exp_pars.use_supercategories, use_categories=exp_pars.use_categories, force_dataset_update=exp_pars.force_dataset_update, captions_per_image_id=exp_pars.captions_per_image_id)
 
     print("There are "+str(len(dataset_train))+" captions considered in total (train)")
     print("There are "+str(len(dataset_val))+" captions considered in total (val)")
