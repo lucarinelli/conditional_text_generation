@@ -244,8 +244,8 @@ def encode_dataset(dataset, tokenizer):
 
 def encode_and_format_dataset(dataset, dataset_Type: DatasetType, tokenizer):
     encoded = encode_dataset(dataset, tokenizer)
-    if isinstance(DatasetType.TRAIN, dataset_Type):
+    if DatasetType.TRAIN == dataset_Type:
         encoded.set_format(type='torch', columns=['input_ids', 'attention_mask', 'labels'])
-    elif isinstance(DatasetType.eval, dataset_Type):
+    elif DatasetType.eval == dataset_Type:
         encoded.set_format(type='torch', columns=['input_ids', 'attention_mask', 'labels', 'image_id'])
     return encoded
