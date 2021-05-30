@@ -12,6 +12,7 @@ from pathlib import Path
 from itertools import chain, combinations, groupby
 from datasets import load_dataset, Dataset
 import glob
+import multiprocessing as mp
 
 DATA_PATH="./data"
 
@@ -24,8 +25,8 @@ def download_annotations_dataset(data_path=DATA_PATH):
         subprocess.run(["wget","-P", data_path, "http://images.cocodataset.org/annotations/annotations_trainval2017.zip"])
         subprocess.run(["unzip", "-d", data_path, os.path.join(data_path,"annotations_trainval2017.zip")])
 
-def map_and_join_dataset(data_instances, data_captions):
-    if not experiment_parameters["use_categories"] and not experiment_parameters["use_supercategories"]:
+def map_and_join_dataset(data_instances, data_captions, use_supercategories=True, use_categories=False):
+    if not use_categories and not use_supercategories:
         print("One of categories and supercategories has to be used!")
         sys.exit()
 
@@ -76,10 +77,10 @@ def map_and_join_dataset(data_instances, data_captions):
               for a in annotations_data_dict[image_id]:
                   category_name = categories_data_dict[a["category_id"]]["name"]
                   supercategory_name = categories_data_dict[a["category_id"]]["supercategory"]
-                  if experiment_parameters["use_categories"]:
+                  if use_categories:
                       tmp_categories_dict[category_name] = 1
                       control_codes_dict[category_name] = 1
-                  if experiment_parameters["use_supercategories"]:
+                  if use_supercategories:
                     tmp_categories_dict[supercategory_name] = 1
                     control_codes_dict[supercategory_name] = 1
               item["categories"]=list(tmp_categories_dict.keys())
@@ -92,17 +93,14 @@ def map_and_join_dataset(data_instances, data_captions):
             else:
               references_dict[image_id] = [caption["caption"]]
 
-
-    #TODO compute total of captions?
-
     print("There are "+str(no_category_counter)+" captions without a category")
     return dataset, references_dict, list(control_codes_dict.keys())
 
-def load_or_setup_dataset(data_path=DATA_PATH, split='train'):
+def load_or_setup_dataset(data_path=DATA_PATH, split='train', use_supercategories=True, use_categories=False, force_dataset_update=False):
     if not split in ['train', 'val']:
         print("Unknown split: "+split)
         sys.exit()
-    if not experiment_parameters["force_dataset_update"] and os.path.isfile(os.path.join(data_path, "dataset_with_ctrl_"+split+".json")):
+    if not force_dataset_update and os.path.isfile(os.path.join(data_path, "dataset_with_ctrl_"+split+".json")):
         print ("Dataset json file, loading dataset...")
         with open(os.path.join(data_path, "dataset_with_ctrl_"+split+".json"), "r") as read_file:
             dataset = json.load(read_file)
@@ -119,7 +117,7 @@ def load_or_setup_dataset(data_path=DATA_PATH, split='train'):
         with open(os.path.join(data_path,"annotations/captions_"+split+"2017.json"), "r") as read_file:
             data_captions = json.load(read_file)
 
-        dataset, references_dict, control_codes = map_and_join_dataset(data_instances, data_captions)
+        dataset, references_dict, control_codes = map_and_join_dataset(data_instances, data_captions, use_supercategories, use_categories)
 
         with open(os.path.join(data_path,"control_codes_"+split+".json"), 'w') as outfile:
             json.dump(control_codes, outfile)
@@ -131,8 +129,6 @@ def load_or_setup_dataset(data_path=DATA_PATH, split='train'):
             json.dump(dataset, outfile)
     return dataset, references_dict, control_codes
 
-import multiprocessing as mp
-
 def powerset(iterable, max_size=None):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
     s = list(iterable)
@@ -141,17 +137,22 @@ def powerset(iterable, max_size=None):
     else:
         return chain.from_iterable(combinations(s, r) for r in range(min(max_size, len(s)+1)))
 
-def process_chunk(chunk):
-    chunk_number = chunk[0]
-    chunk_items = chunk[1]
-    data_path = chunk[2]
-    split = chunk[3]
+def process_chunk(parameters):
+    chunk_number = parameters[0]
+    chunk_items = parameters[1]
+    data_path = parameters[2]
+    split = parameters[3]
+    use_control_codes = parameters[4]
+    control_codes_powerset = parameters[5]
+    max_control_codes_per_caption = parameters[6]
+    control_codes_type = parameters[7]
+
     json_file = os.path.join(data_path, "captions_"+split+"_"+str(chunk_number)+".json")
     captions_array_for_json = []
     for item in chunk_items:
-        if experiment_parameters["use_control_codes"]:
-            if experiment_parameters["use_control_codes_powerset"]:
-                control_codes_combinations = powerset(item['categories'], experiment_parameters["max_control_codes_per_caption"])
+        if use_control_codes:
+            if use_control_codes_powerset:
+                control_codes_combinations = powerset(item['categories'], max_control_codes_per_caption)
             else:
                 control_codes_combinations = [item['categories']]
         else:
@@ -159,9 +160,9 @@ def process_chunk(chunk):
         for control_codes_combination in control_codes_combinations:
             pre_control_codes_string=""
             for category in sorted(control_codes_combination):
-                if experiment_parameters["control_codes_type"] == "special_token":
+                if control_codes_type == "special_token":
                     pre_control_codes_string+="<CTRL:"+category.replace(" ","_")+">"
-                elif experiment_parameters["control_codes_type"] == "separators":
+                elif control_codes_type == "separators":
                     pre_control_codes_string+=category+", "
                 else:
                     print("ERROR: wrong control code type")
@@ -170,14 +171,12 @@ def process_chunk(chunk):
     with open(json_file, 'w') as captions_json:
         json.dump({"data": captions_array_for_json}, captions_json)
 
-
-def write_json_chunks(dataset, split, data_path, chunk_size):
+def write_json_chunks(dataset, split, data_path, chunk_size, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type):
     chunks = [dataset[start:min(start+chunk_size,len(dataset))] for start in range(0, len(dataset), chunk_size)]
     pool = mp.Pool(processes=8)
-    pool.map(process_chunk, [(chunk_n, chunk_items, data_path, split) for chunk_n, chunk_items in enumerate(chunks)])
+    pool.map(process_chunk, [(chunk_n, chunk_items, data_path, split, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type) for chunk_n, chunk_items in enumerate(chunks)])
 
-
-def load_our_dataset(data_path, split):
+def load_our_dataset(exp_pars, data_path=DATA_PATH):
     dataset_train, _, categories = load_or_setup_dataset(data_path=data_path, split="train")
     dataset_val, references, _ = load_or_setup_dataset(data_path=data_path, split="val")
 
@@ -187,7 +186,7 @@ def load_our_dataset(data_path, split):
     print("The following "+str(len(categories))+" categories are present in the dataset:")
     print(categories)
 
-    if experiment_parameters["use_control_codes"] and experiment_parameters["control_codes_type"] == "special_token":
+    if exp_pars.use_control_codes and exp_pars.control_codes_type == "special_token":
         control_codes = []
         for category in categories:
             control_codes += ["<CTRL:"+category.replace(" ","_")+">"]
@@ -195,9 +194,9 @@ def load_our_dataset(data_path, split):
         print("Processed control codes:")
         print(control_codes)
 
-    chunk_size = experiment_parameters["chunk_size"]
-    write_json_chunks(dataset_train, "train", data_path, chunk_size)
+    chunk_size = exp_pars.chunk_size_json_mp
+    write_json_chunks(dataset_train, "train", data_path, chunk_size, exp_pars.use_control_codes, exp_pars.control_codes_powerset, exp_pars.max_control_codes_per_caption, exp_pars.control_codes_type)
     write_json_chunks(dataset_val, "val", data_path, chunk_size)
-  
-    dataset_train, dataset_val = load_dataset('json', data_files={'train': glob.glob('./data/captions_train_*.json'), 'val': glob.glob('./data/captions_val_*.json')}, split=['train', 'val'], field="data")
+
+    dataset_train, dataset_val = load_dataset('json', data_files={'train': glob.glob(os.path.join(data_path, 'captions_train_*.json')), 'val': glob.glob(os.path.join(data_path, '/captions_val_*.json'))}, split=['train', 'val'], field="data")
     return dataset_train, dataset_val
