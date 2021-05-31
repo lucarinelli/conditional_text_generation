@@ -378,3 +378,20 @@ def compute_metrics(pred, image_ids, tokenizer, references):
     return {
         'bleu': final_score
     }
+
+def freeze_layers(experimental_parameters, model):
+    # - Freeze all layers except last n:
+    for parameter in model.parameters():
+        parameter.requires_grad = False
+
+    for i, m in enumerate(model.transformer.h):        
+        #Only un-freeze the last n transformer blocks
+        if i+1 > 12 - experimental_parameters.freezed_layers:
+            for parameter in m.parameters():
+                parameter.requires_grad = True 
+
+    for parameter in model.transformer.ln_f.parameters():        
+        parameter.requires_grad = True
+
+    for parameter in model.lm_head.parameters():        
+        parameter.requires_grad = True
