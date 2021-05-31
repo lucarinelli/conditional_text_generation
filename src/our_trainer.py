@@ -362,3 +362,21 @@ class OurTrainer(Trainer):
                 metrics[f"{metric_key_prefix}_{key}"] = metrics.pop(key)
 
         return EvalLoopOutput(predictions=all_preds, label_ids=all_labels, metrics=metrics, num_samples=num_samples)
+
+
+def freeze_layers(experimental_parameters, model):
+    # - Freeze all layers except last n:
+    for parameter in model.parameters():
+        parameter.requires_grad = False
+
+    for i, m in enumerate(model.transformer.h):        
+        #Only un-freeze the last n transformer blocks
+        if i+1 > 12 - experimental_parameters.freezed_layers:
+            for parameter in m.parameters():
+                parameter.requires_grad = True 
+
+    for parameter in model.transformer.ln_f.parameters():        
+        parameter.requires_grad = True
+
+    for parameter in model.lm_head.parameters():        
+        parameter.requires_grad = True
