@@ -106,6 +106,8 @@ def pos_bleu_score(references, model_output, k=2):
 def compute_metrics(pred, image_ids, tokenizer, references):
     preds = pred.predictions
     metric = datasets.load_metric('sacrebleu')
+    nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger')
 
     preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
 
