@@ -124,7 +124,7 @@ def compute_metrics(pred, image_ids, tokenizer, references):
     pos_bleu_4_result = pos_bleu_score(references_local_list, preds, k=4)
     
     return {
-        'bleu': bleu_score,
+        'bleu': bleu_result,
         'selfbleu2': self_bleu_2_result,
         'selfbleu3': self_bleu_3_result,
         'selfbleu4': self_bleu_4_result,
