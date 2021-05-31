@@ -78,23 +78,26 @@ def pos_bleu_score(references, model_output, k=2):
 
 
     for i in range(N):
-        ref = references[i]
+        refs = references[i]
         out = model_output[i]
-        ref_words = word_tokenize(ref)
+        ref_words = [word_tokenize(ref) for ref in refs]
         out_words = word_tokenize(out)
 
-        ref_pos = pos_tag(ref_words)
+        refs_pos = [pos_tag(ref_word) for ref_word in ref_words]
         out_pos = pos_tag(out_words)
 
-        ref_words = []
-        for i in range(len(ref_pos)):
-            ref_words.append(ref_pos[i][1])
+        refs_words = []
+        for ref_pos in refs_pos:
+            ref_words = []
+            for i in range(len(ref_pos)):
+                ref_words.append(ref_pos[i][1])
+            refs_words.append(ref_words)
 
         out_words = []
         for i in range(len(out_pos)):
             out_words.append(out_pos[i][1])
 
-        score_i = sentence_bleu([ref_words],out_words,weights,smoothing_function = chencherry.method1)
+        score_i = sentence_bleu(refs_words, out_words, weights, smoothing_function = chencherry.method1)
 
         sum_scores += score_i
 
@@ -103,7 +106,6 @@ def pos_bleu_score(references, model_output, k=2):
 def compute_metrics(pred, image_ids, tokenizer, references):
     preds = pred.predictions
     metric = datasets.load_metric('sacrebleu')
-    nltk.download('punkt')
 
     preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
 
