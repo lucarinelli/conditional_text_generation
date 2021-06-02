@@ -36,13 +36,13 @@ def bleu_score(references, model_output, k):
 
 
     for i in range(N):
-        ref = references[i]
+        refs = references[i]
         out = model_output[i]
 
-        ref_words = str.split(ref)
-        out_words = str.split(out)
+        ref_words = [word_tokenize(ref) for ref in refs]
+        out_words = word_tokenize(out)
 
-        score_i = sentence_bleu([ref_words],out_words,weights,smoothing_function = chencherry.method1)
+        score_i = sentence_bleu(ref_words,out_words,weights,smoothing_function = chencherry.method1)
 
         sum_scores += score_i
 
