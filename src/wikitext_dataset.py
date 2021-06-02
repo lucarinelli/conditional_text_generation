@@ -85,7 +85,7 @@ def write_wikitext_json_chunks(dataset, split, data_path, chunk_size, use_contro
 def write_wikitext_txt_chunks(dataset, split, data_path, chunk_size, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type):
     chunks = [dataset[start:min(start+chunk_size,len(dataset))] for start in range(0, len(dataset), chunk_size)]
     pool = mp.Pool(processes=8)
-    pool.map(process_chunk_json, [(chunk_n, chunk_items, data_path, split, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type, "wikitext_captions") for chunk_n, chunk_items in enumerate(chunks)])
+    pool.map(process_chunk_txt, [(chunk_n, chunk_items, data_path, split, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type, "wikitext_captions") for chunk_n, chunk_items in enumerate(chunks)])
 
 def get_wikitext_dataset(exp_pars, data_path=DATA_PATH):
     dataset_train, categories = load_or_setup_wikitext_dataset(data_path=data_path, split="train", force_dataset_update=exp_pars.force_dataset_update)

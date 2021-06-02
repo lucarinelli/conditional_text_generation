@@ -136,7 +136,7 @@ def write_json_chunks(dataset, split, data_path, chunk_size, use_control_codes, 
 def write_txt_chunks(dataset, split, data_path, chunk_size, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type):
     chunks = [dataset[start:min(start+chunk_size,len(dataset))] for start in range(0, len(dataset), chunk_size)]
     pool = mp.Pool(processes=8)
-    pool.map(process_chunk_json, [(chunk_n, chunk_items, data_path, split, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type, "captions") for chunk_n, chunk_items in enumerate(chunks)])
+    pool.map(process_chunk_txt, [(chunk_n, chunk_items, data_path, split, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type, "captions") for chunk_n, chunk_items in enumerate(chunks)])
 
 
 def get_dataset(exp_pars, data_path=DATA_PATH):
