@@ -9,7 +9,7 @@ class ExperimentParameters:
     limited_run=True, 
     max_train_set_len=5000, max_val_set_len=1000, model="gpt2", 
     chunk_size_json_mp=500, force_dataset_update=False, 
-    random_seed=42, training_args=None, metrics_for_all_epochs=False,
+    random_seed=42, training_args=None, metrics_for_all_epochs=False, pretrained=True, data_path="/content/data",
     freezed_layers = 0):
         self.run_name=run_name
         self.use_control_codes=use_control_codes
@@ -28,6 +28,8 @@ class ExperimentParameters:
         self.training_args = training_args
         self.captions_per_image_id= captions_per_image_id
         self.metrics_for_all_epochs = metrics_for_all_epochs
+        self.pretrained = pretrained
+        self.data_path = data_path
         self.freezed_layers = freezed_layers
 
         print("Experiment parameters are:")

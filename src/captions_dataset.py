@@ -142,7 +142,7 @@ def powerset(iterable, max_size=None):
     else:
         return chain.from_iterable(combinations(s, r) for r in range(min(max_size, len(s)+1)))
 
-def process_chunk(parameters):
+def process_chunk_json(parameters):
     chunk_number = parameters[0]
     chunk_items = parameters[1]
     data_path = parameters[2]
@@ -179,7 +179,46 @@ def process_chunk(parameters):
 def write_json_chunks(dataset, split, data_path, chunk_size, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type):
     chunks = [dataset[start:min(start+chunk_size,len(dataset))] for start in range(0, len(dataset), chunk_size)]
     pool = mp.Pool(processes=8)
-    pool.map(process_chunk, [(chunk_n, chunk_items, data_path, split, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type) for chunk_n, chunk_items in enumerate(chunks)])
+    pool.map(process_chunk_json, [(chunk_n, chunk_items, data_path, split, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type) for chunk_n, chunk_items in enumerate(chunks)])
+
+def process_chunk_txt(parameters):
+    chunk_number = parameters[0]
+    chunk_items = parameters[1]
+    data_path = parameters[2]
+    split = parameters[3]
+    use_control_codes = parameters[4]
+    control_codes_powerset = parameters[5]
+    max_control_codes_per_caption = parameters[6]
+    control_codes_type = parameters[7]
+
+    json_file = os.path.join(data_path, "captions_"+split+"_"+str(chunk_number)+".txt")
+    captions_array_for_json = []
+    with open(json_file, 'w') as captions_txt:
+        for item in chunk_items:
+            if use_control_codes:
+                if control_codes_powerset:
+                    control_codes_combinations = powerset(item['categories'], max_control_codes_per_caption)
+                else:
+                    control_codes_combinations = [item['categories']]
+            else:
+                control_codes_combinations = [[]]
+            for control_codes_combination in control_codes_combinations:
+                pre_control_codes_string=""
+                for category in sorted(control_codes_combination):
+                    if control_codes_type == "special_token":
+                        pre_control_codes_string+="<CTRL:"+category.replace(" ","_")+">"
+                    elif control_codes_type == "separators":
+                        pre_control_codes_string+=category+", "
+                    else:
+                        print("ERROR: wrong control code type")
+                        return -1  # TODO here we could fail better
+                captions_txt.write(pre_control_codes_string+'<|endoftext|>'+item["caption"]+'<|endoftext|>\n')
+
+def write_txt_chunks(dataset, split, data_path, chunk_size, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type):
+    chunks = [dataset[start:min(start+chunk_size,len(dataset))] for start in range(0, len(dataset), chunk_size)]
+    pool = mp.Pool(processes=8)
+    pool.map(process_chunk_json, [(chunk_n, chunk_items, data_path, split, use_control_codes, control_codes_powerset, max_control_codes_per_caption, control_codes_type) for chunk_n, chunk_items in enumerate(chunks)])
+
 
 def get_dataset(exp_pars, data_path=DATA_PATH):
     dataset_train, _, categories = load_or_setup_dataset(data_path=data_path, split="train", use_supercategories=exp_pars.use_supercategories, use_categories=exp_pars.use_categories, force_dataset_update=exp_pars.force_dataset_update, captions_per_image_id=exp_pars.captions_per_image_id)
@@ -200,8 +239,16 @@ def get_dataset(exp_pars, data_path=DATA_PATH):
         print(control_codes)
 
     chunk_size = exp_pars.chunk_size_json_mp
+    print("Writing dataset to json chunks")
     write_json_chunks(dataset_train, "train", data_path, chunk_size, exp_pars.use_control_codes, exp_pars.control_codes_powerset, exp_pars.max_control_codes_per_caption, exp_pars.control_codes_type)
     write_json_chunks(dataset_val, "val", data_path, chunk_size, exp_pars.use_control_codes, exp_pars.control_codes_powerset, exp_pars.max_control_codes_per_caption, exp_pars.control_codes_type)
+
+    # Write txt files for tokenizer training if necessary
+    if not exp_pars.pretrained:
+        print("Writing txt files for tokenizer")
+        write_txt_chunks(dataset_train, "train", data_path, chunk_size, False, False, 0, None)
+
+    print("Load dataset in HuggingFace datasets")
 
     dataset_train, dataset_val = load_dataset('json', data_files={'train': glob.glob(os.path.join(data_path, 'captions_train_*.json')), 'val': glob.glob(os.path.join(data_path, 'captions_val_*.json'))}, split=['train', 'val'], field="data")
     
@@ -219,11 +266,37 @@ def get_dataset(exp_pars, data_path=DATA_PATH):
     
     return dataset_train, dataset_val, control_codes, references_validation
 
-def get_tokenizer(exp_pars, control_codes):
-    from transformers import GPT2TokenizerFast
+def get_tokenizer(exp_pars, control_codes = []):
+    if exp_pars.pretrained:
+        from transformers import GPT2TokenizerFast
 
-    tokenizer = GPT2TokenizerFast.from_pretrained(exp_pars.model)
+        tokenizer = GPT2TokenizerFast.from_pretrained(exp_pars.model)
+    else:
+        from tokenizers import ByteLevelBPETokenizer
+        from transformers import PreTrainedTokenizerFast        
+
+        # Initialize a tokenizer
+        tokenizer = ByteLevelBPETokenizer()
+        print("Training tokenizer")
+        tokenizer.train(files=glob.glob(os.path.join(exp_pars.data_path, 'captions_train_*.txt')), vocab_size=52000, min_frequency=2, special_tokens=[
+            "<|endoftext|>",
+        ])
+        # Save the trained tokenizer
+        tokenizer.save("byte-level-BPE.tokenizer.json")
+        # Load it using transformers
+
+        from typing import Optional, Tuple
+
+        class PreTrainedTokenizerFastMod(PreTrainedTokenizerFast):
+            def save_vocabulary(self, save_directory: str = exp_pars.data_path, filename_prefix: Optional[str] = None) -> Tuple[str]:
+                files = self._tokenizer.model.save(save_directory, name=filename_prefix)
+                return tuple(files)
+
+        tokenizer = PreTrainedTokenizerFastMod(tokenizer_file="byte-level-BPE.tokenizer.json")
+        tokenizer.add_special_tokens({'eos_token': "<|endoftext|>"})
+
     tokenizer.pad_token = tokenizer.eos_token
+
     print("Tokenizer before added special tokens "+str(len(tokenizer)))
 
     if exp_pars.use_control_codes and exp_pars.control_codes_type == "special_token":
