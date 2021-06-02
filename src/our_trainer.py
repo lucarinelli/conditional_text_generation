@@ -3,6 +3,9 @@ Our trainer, obtained overriding huggingface's Trainer and applying the changes 
 What we changed:
     - ?
 '''
+
+from experiment_parameters import ExperimentParameters
+
 from transformers import Trainer
 
 import collections
@@ -175,6 +178,27 @@ if TYPE_CHECKING:
 logger = logging.get_logger(__name__)
 
 class OurTrainer(Trainer):
+    def __init__(
+        self,
+        model: Union[PreTrainedModel, torch.nn.Module] = None,
+        args: TrainingArguments = None,
+        data_collator: Optional[DataCollator] = None,
+        train_dataset: Optional[Dataset] = None,
+        eval_dataset: Optional[Dataset] = None,
+        tokenizer: Optional[PreTrainedTokenizerBase] = None,
+        model_init: Callable[[], PreTrainedModel] = None,
+        compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+        callbacks: Optional[List[TrainerCallback]] = None,
+        optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None, None),
+        experiment_parameters: ExperimentParameters = None
+    ):
+        super().__init__(model, args, data_collator,
+                       train_dataset, eval_dataset,
+                       tokenizer, model_init, compute_metrics, 
+                       callbacks, optimizers)
+        self.experiment_parameters = experiment_parameters
+
+
     def evaluation_loop(
         self,
         dataloader: DataLoader,
@@ -346,7 +370,10 @@ class OurTrainer(Trainer):
       
         # Metrics!
         if self.compute_metrics is not None and all_preds is not None and all_labels is not None:
-            metrics = self.compute_metrics(EvalPrediction(predictions=all_preds, label_ids=all_labels), all_image_ids, self.tokenizer, self.args.references)
+            if self.experiment_parameters.metrics_for_all_epochs or (self.state.epoch == self.args.num_train_epochs - 1):
+                metrics = self.compute_metrics(EvalPrediction(predictions=all_preds, label_ids=all_labels), all_image_ids, self.tokenizer, self.args.references)
+            else:
+                metrics = {}
         else:
             metrics = {}
 
