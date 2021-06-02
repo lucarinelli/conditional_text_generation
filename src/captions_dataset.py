@@ -162,7 +162,7 @@ def get_dataset(exp_pars, data_path=DATA_PATH):
     write_json_chunks(dataset_train, "train", data_path, chunk_size, exp_pars.use_control_codes, exp_pars.control_codes_powerset, exp_pars.max_control_codes_per_caption, exp_pars.control_codes_type)
     write_json_chunks(dataset_val, "val", data_path, chunk_size, exp_pars.use_control_codes, exp_pars.control_codes_powerset, exp_pars.max_control_codes_per_caption, exp_pars.control_codes_type)
 
-    # Write txt files for tokenizer training if necessary
+    # Write txt files for tokenizer training if we are not using a pretrained tokenizer/model
     if not exp_pars.pretrained:
         print("Writing txt files for tokenizer")
         write_txt_chunks(dataset_train, "train", data_path, chunk_size, False, False, 0, None)
