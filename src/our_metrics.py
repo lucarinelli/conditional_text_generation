@@ -157,6 +157,8 @@ def compute_metrics(pred, image_ids, tokenizer, references):
 
     sacrebleu_result = metric.compute(predictions=preds, references=references_local_list)
 
+    print(sacrebleu_result)
+
     bleu_2_result = bleu_score(references_local_list, preds, k=2)
     bleu_3_result = bleu_score(references_local_list, preds, k=3)
     bleu_4_result = bleu_score(references_local_list, preds, k=4)
