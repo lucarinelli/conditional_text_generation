@@ -19,7 +19,8 @@ class Generator():
         joiner = ""
         control_codes = map(lambda x: "<CTRL:"+x+">", control_codes)
     
-    prompt = joiner.join(control_codes) + input
+    ctrl = joiner.join(control_codes)
+    prompt = ctrl + input
             
     generated = torch.tensor(self.tokenizer.encode(prompt)).unsqueeze(0)
     device = torch.device("cuda")
@@ -38,4 +39,5 @@ class Generator():
 
     for i, sample_output in enumerate(sample_outputs):
         text = self.tokenizer.decode(sample_output, skip_special_tokens=True)
+        text = text.replace(ctrl, "")
         print("{}: {}\n\n".format(i+1,  text))
