@@ -28,7 +28,6 @@ class Generator():
     self.model.eval()
     sample_outputs = self.model.generate(generated, 
                                     do_sample=True,   
-                                    min_length=50, 
                                     max_length=max_len,
                                     top_k=30,                                 
                                     top_p=0.7,        
