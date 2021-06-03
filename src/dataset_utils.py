@@ -48,7 +48,7 @@ def process_chunk_json(parameters):
                 else:
                     print("ERROR: wrong control code type")
                     return -1  # TODO here we could fail better
-            captions_array_for_json += [{"caption": pre_control_codes_string+'<|endoftext|>'+item["caption"]+'<|endoftext|>',"image_id": item["image_id"]}]
+            captions_array_for_json += [{"caption": pre_control_codes_string+'<|startoftext|>'+item["caption"]+'<|endoftext|>',"image_id": item["image_id"]}]
     with open(json_file, 'w') as captions_json:
         json.dump({"data": captions_array_for_json}, captions_json)
 
@@ -85,4 +85,4 @@ def process_chunk_txt(parameters):
                     else:
                         print("ERROR: wrong control code type")
                         return -1  # TODO here we could fail better
-                captions_txt.write(pre_control_codes_string+'<|endoftext|>'+item["caption"]+'<|endoftext|>\n')
+                captions_txt.write(pre_control_codes_string+'<|startoftext|>'+item["caption"]+'<|endoftext|>\n')

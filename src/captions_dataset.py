@@ -188,9 +188,9 @@ def get_dataset(exp_pars, data_path=DATA_PATH):
 
 def get_tokenizer(exp_pars, control_codes = []):
     if exp_pars.pretrained:
-        from transformers import GPT2TokenizerFast
-
-        tokenizer = GPT2TokenizerFast.from_pretrained(exp_pars.model)
+        from transformers import AutoTokenizer
+  
+        tokenizer = AutoTokenizer.from_pretrained(exp_pars.model)
     else:
         from tokenizers import ByteLevelBPETokenizer
         from transformers import PreTrainedTokenizerFast        
@@ -213,8 +213,8 @@ def get_tokenizer(exp_pars, control_codes = []):
                 return tuple(files)
 
         tokenizer = PreTrainedTokenizerFastMod(tokenizer_file="byte-level-BPE.tokenizer.json")
-        tokenizer.add_special_tokens({'eos_token': "<|endoftext|>"})
-
+    
+    tokenizer.add_special_tokens({'eos_token': "<|endoftext|>", 'bos_token': "<|startoftext|>"})
     tokenizer.pad_token = tokenizer.eos_token
 
     print("Tokenizer before added special tokens "+str(len(tokenizer)))
