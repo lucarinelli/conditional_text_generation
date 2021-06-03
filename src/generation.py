@@ -11,7 +11,7 @@ class Generator():
     self.tokenizer = tokenizer
 
 
-  def generate(self, control_codes, type: ControlCodeType, input, max_len):
+  def generate(self, control_codes, type: ControlCodeType, input, max_len, num_return_sequences=3):
     joiner = None
     if type == ControlCodeType.SEPARATOR:
         joiner = ", "
@@ -31,10 +31,10 @@ class Generator():
                                     do_sample=True,   
                                     max_length=max_len,
                                     top_k=30,                                 
-                                    top_p=0.7,        
+                                    top_p=0.7,     
                                     temperature=0.9,
                                     repetition_penalty=2.0,
-                                    num_return_sequences=3
+                                    num_return_sequences= num_return_sequences
                                     )
 
     for i, sample_output in enumerate(sample_outputs):
