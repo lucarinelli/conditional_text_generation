@@ -6,7 +6,7 @@ class ControlCodeType(Enum):
     SPECIAL_TOKEN = 2
 
 class Generator():
-  def init(self, model, tokenizer):
+  def __init__(self, model, tokenizer):
     self.model = model
     self.tokenizer = tokenizer
 
