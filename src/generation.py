@@ -17,6 +17,7 @@ class Generator():
         joiner = ", "
     else:
         joiner = ""
+        control_codes = map(lambda x: "<CTRL:"+x+">", control_codes)
     
     prompt = joiner.join(control_codes) + input
             
