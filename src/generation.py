@@ -1,5 +1,5 @@
 import torch
-
+from enum import Enum
 
 class ControlCodeType(Enum):
     SEPARATOR = 1
