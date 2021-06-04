@@ -1,5 +1,6 @@
 import torch
 from enum import Enum
+import re
 
 class ControlCodeType(Enum):
     SEPARATOR = 1
@@ -17,13 +18,19 @@ class Generator():
         joiner = ", "
     else:
         joiner = ""
-        control_codes = map(lambda x: "<CTRL:"+x+">", control_codes)
+        control_codes = list(map(lambda x: "<CTRL:"+x+">", control_codes))
     
     ctrl = joiner.join(control_codes)
     prompt = ctrl + input
             
     generated = torch.tensor(self.tokenizer.encode(prompt)).unsqueeze(0)
-    device = torch.device("cuda")
+    
+    if torch.cuda.is_available():
+      device = torch.device("cuda")
+    else :
+      device = torch.device("cpu")
+
+
     generated = generated.to(device)
 
     self.model.eval()
@@ -36,8 +43,8 @@ class Generator():
                                     repetition_penalty=2.0,
                                     num_return_sequences= num_return_sequences
                                     )
-
     for i, sample_output in enumerate(sample_outputs):
         text = self.tokenizer.decode(sample_output, skip_special_tokens=True)
-        text = text.replace(ctrl, "")
+        for control_code in control_codes:
+          text = re.sub("^"+control_code, "", text)
         print("{}: {}\n\n".format(i+1,  text))
