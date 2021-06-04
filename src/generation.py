@@ -14,7 +14,7 @@ class Generator():
 
   def generate(self, control_codes, type: ControlCodeType, input, 
       max_len, num_return_sequences=3,
-      do_sample=True, top_k=30, top_p=0.7, 
+      top_k=30, top_p=0.7, 
       temperature=0.9, repetition_penalty=2.0):
 
     joiner = None
@@ -39,7 +39,7 @@ class Generator():
 
     self.model.eval()
     sample_outputs = self.model.generate(generated, 
-                                    do_sample=do_sample,   
+                                    do_sample=True,   
                                     max_length=max_len,
                                     top_k=top_k,                                 
                                     top_p=top_p,     
