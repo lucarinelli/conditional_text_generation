@@ -79,6 +79,6 @@ generator = Generator(model,tokenizer)
 
 control_codes = args.control_codes.split(", ")
 
-generator.generate(control_codes, args.model["code_type"], args.input, args.max_len,
+generator.generate(control_codes, model_obj["code_type"], args.input, args.max_len,
                     args.num_returned_sequences, args.top_k, args.top_p, args.temperature, 
                     args.repetition_penalty )
