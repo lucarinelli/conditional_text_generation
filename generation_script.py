@@ -3,30 +3,28 @@ import os
 from src.generation import *
 from enum import Enum
 
-class Models(Enum):
-    ST = {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
+MODELS = {
+    "ST" : {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
         "name": "ST", 
         "url":  "polito_aiml2021_textgen/uncategorized/gpt2-specialtoken:v1",
-        "folder" : ""}
-    SEP = {"code_type": ControlCodeType.SEPARATOR, 
+        "folder" : "./artifacts/gpt2-specialtoken-v1"},
+    "SEP" : {"code_type": ControlCodeType.SEPARATOR, 
         "name" : "SEP" ,
         "url":"polito_aiml2021_textgen/gpt2-separators/model-8p9purad:v0",
-        "folder": "" }
-    ST_10F = {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
+        "folder": "./artifacts/model-8p9purad-v0" },
+    "ST_10F" : {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
         "name": "ST_10F", 
         "url":"polito_aiml2021_textgen/uncategorized/gpt2-specialtoken-10freezed:v0",
-        "folder": ""}
-    SEP_10F = {"code_type" : ControlCodeType.SEPARATOR, 
+        "folder": "./artifacts/gpt2-specialtoken-10freezed-v0"},
+    "SEP_10F" : {"code_type" : ControlCodeType.SEPARATOR, 
         "name": "SEP_10F",  
         "url":"polito_aiml2021_textgen/uncategorized/gpt2-TRUE_separators-10freezed:v0",
-        "folder": ""}
-    D_ST = {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
+        "folder": "./artifacts/gpt2-TRUE_separators-10freezed-v0"},
+    "D_ST" : {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
         "name": "D_ST", 
         "url":"polito_aiml2021_textgen/distilgpt2-specialtoken/model-3b1lzdro:v0",
-        "folder": "" }
-
-def __str__(self):
-        return self.value.name["name"]
+        "folder": "./artifacts/model-3b1lzdro-v0" }
+}
 
 """ input, 
       max_len, num_return_sequences=3,
@@ -35,7 +33,7 @@ def __str__(self):
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--model', type=Models, required=True, choices=list(Models),
+parser.add_argument('--model', type=str, required=True, choices=list(MODELS.keys()),
                                         help='location of model checkpoint')
 
 
@@ -64,21 +62,27 @@ parser.add_argument('--num_returned_sequences',type=int,default=3,
 
 args = parser.parse_args()
 
-artifact_dir = args.model["folder"]
+model_name = args.model
+model_obj = MODELS[model_name]
+artifact_dir = model_obj['folder']
 
 if not os.path.isdir(artifact_dir):
     os.environ["WANDB_API_KEY"] = "92907f006616f5c5d84bf6f28f4ab8f6220b5ea1"
     import wandb
     run = wandb.init()
-    artifact = run.use_artifact(args.model.url, type='model')
+    artifact = run.use_artifact(model_obj["url"], type='model')
     artifact_dir = artifact.download()
 
 
 
 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 
+print("Loading model...")
 model = GPT2LMHeadModel.from_pretrained(artifact_dir).cuda()
+print("Model loaded!")
+print("Loading tokenizer...")
 tokenizer = GPT2TokenizerFast.from_pretrained(artifact_dir)
+print("Tokenizer loaded!")
 
 generator = Generator(model,tokenizer)
 
