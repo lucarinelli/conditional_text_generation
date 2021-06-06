@@ -4,26 +4,26 @@ from src.generation import *
 from enum import Enum
 
 class Models(Enum):
-    ST = {code_type : ControlCodeType.SPECIAL_TOKEN, 
-        name: "ST", 
-        url:  "polito_aiml2021_textgen/uncategorized/gpt2-specialtoken:v1",
-        folder : ""}
-    SEP = {code_type: ControlCodeType.SEPARATOR, 
-        name : "SEP" ,
-        url:"polito_aiml2021_textgen/gpt2-separators/model-8p9purad:v0",
-        folder: "" }
-    ST_10F = {code_type : ControlCodeType.SPECIAL_TOKEN, 
-        name: "ST_10F", 
-        url:"polito_aiml2021_textgen/uncategorized/gpt2-specialtoken-10freezed:v0",
-        folder:""}
-    SEP_10F = {code_type : ControlCodeType.SEPARATOR, 
-        name: "SEP_10F",  
-        url:"polito_aiml2021_textgen/uncategorized/gpt2-TRUE_separators-10freezed:v0",
-        folder:""}
+    ST = {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
+        "name": "ST", 
+        "url":  "polito_aiml2021_textgen/uncategorized/gpt2-specialtoken:v1",
+        "folder" : ""}
+    SEP = {"code_type": ControlCodeType.SEPARATOR, 
+        "name" : "SEP" ,
+        "url":"polito_aiml2021_textgen/gpt2-separators/model-8p9purad:v0",
+        "folder": "" }
+    ST_10F = {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
+        "name": "ST_10F", 
+        "url":"polito_aiml2021_textgen/uncategorized/gpt2-specialtoken-10freezed:v0",
+        "folder": ""}
+    SEP_10F = {"code_type" : ControlCodeType.SEPARATOR, 
+        "name": "SEP_10F",  
+        "url":"polito_aiml2021_textgen/uncategorized/gpt2-TRUE_separators-10freezed:v0",
+        "folder": ""}
     D_ST = {code_type : ControlCodeType.SPECIAL_TOKEN, 
-        name: "D_ST", 
-        url:"polito_aiml2021_textgen/distilgpt2-specialtoken/model-3b1lzdro:v0",
-        folder:"" }
+        "name": "D_ST", 
+        "url":"polito_aiml2021_textgen/distilgpt2-specialtoken/model-3b1lzdro:v0",
+        "folder": "" }
 
 def __str__(self):
         return self.value.name
@@ -64,7 +64,7 @@ parser.add_argument('--num_returned_sequences',type=int,default=3,
 
 args = parser.parse_args()
 
-artifact_dir = args.model.folder
+artifact_dir = args.model["folder"]
 
 if not os.path.isdir(artifact_dir):
     os.environ["WANDB_API_KEY"] = "92907f006616f5c5d84bf6f28f4ab8f6220b5ea1"
@@ -84,6 +84,6 @@ generator = Generator(model,tokenizer)
 
 control_codes = args.control_codes.split(", ")
 
-generator.generate(control_codes, args.control_codes_type, args.input, args.max_len,
+generator.generate(control_codes, args.args.model["code_type"], args.input, args.max_len,
                     args.num_returned_sequences, args.top_k, args.top_p, args.temperature, 
                     args.repetition_penalty )
