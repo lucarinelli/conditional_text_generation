@@ -26,7 +26,7 @@ class Models(Enum):
         "folder": "" }
 
 def __str__(self):
-        return self.value.name
+        return self.value.name["name"]
 
 """ input, 
       max_len, num_return_sequences=3,
