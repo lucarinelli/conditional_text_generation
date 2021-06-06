@@ -3,8 +3,11 @@ from enum import Enum
 import re
 
 class ControlCodeType(Enum):
-    SEPARATOR = 1
-    SPECIAL_TOKEN = 2
+    SEPARATOR = "separator"
+    SPECIAL_TOKEN = "special token"
+    
+    def __str__(self):
+        return self.value
 
 class Generator():
   def __init__(self, model, tokenizer):
