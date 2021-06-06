@@ -41,7 +41,7 @@ args = parser.parse_args()
 
 artifact_dir = args.model_dir
 
-if not os.path.isdir(artifact_dir):
+if artifact_dir is None or not os.path.isdir(artifact_dir):
     artifact_dir = "./artifacts/model-3152aoah-v0"
     if not os.path.isdir("./artifacts/model-3152aoah:v0"): 
         os.environ["WANDB_API_KEY"] = "92907f006616f5c5d84bf6f28f4ab8f6220b5ea1"
