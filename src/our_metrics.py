@@ -158,28 +158,7 @@ def compute_metrics(pred, image_ids, tokenizer, references):
     sacrebleu_result = metric.compute(predictions=preds, references=references_local_list)
 
     print(sacrebleu_result)
-
-    bleu_2_result = bleu_score(references_local_list, preds, k=2)
-    bleu_3_result = bleu_score(references_local_list, preds, k=3)
-    bleu_4_result = bleu_score(references_local_list, preds, k=4)
-
-    self_bleu_2_result = self_bleu_score(tokenizer, preds, k=2)
-    self_bleu_3_result = self_bleu_score(tokenizer, preds, k=3)
-    self_bleu_4_result = self_bleu_score(tokenizer, preds, k=4)
-
-    pos_bleu_2_result = pos_bleu_score(references_local_list, preds, k=2)
-    pos_bleu_3_result = pos_bleu_score(references_local_list, preds, k=3)
-    pos_bleu_4_result = pos_bleu_score(references_local_list, preds, k=4)
     
     return {
-        'sacrebleu': sacrebleu_result,
-        'bleu2': bleu_2_result,
-        'bleu3': bleu_3_result,
-        'bleu4': bleu_4_result,
-        'selfbleu2': self_bleu_2_result,
-        'selfbleu3': self_bleu_3_result,
-        'selfbleu4': self_bleu_4_result,
-        'posbleu2': pos_bleu_2_result,
-        'posbleu3': pos_bleu_3_result,
-        'posbleu4': pos_bleu_4_result,
+        'sacrebleu': sacrebleu_result
     }
