@@ -1,6 +1,32 @@
 import argparse
 import os
 from src.generation import *
+from enum import Enum
+
+class Models(Enum):
+    ST = {code_type : ControlCodeType.SPECIAL_TOKEN, 
+        name: "ST", 
+        url:  "polito_aiml2021_textgen/uncategorized/gpt2-specialtoken:v1",
+        folder : ""}
+    SEP = {code_type: ControlCodeType.SEPARATOR, 
+        name : "SEP" ,
+        url:"polito_aiml2021_textgen/gpt2-separators/model-8p9purad:v0",
+        folder: "" }
+    ST_10F = {code_type : ControlCodeType.SPECIAL_TOKEN, 
+        name: "ST_10F", 
+        url:"polito_aiml2021_textgen/uncategorized/gpt2-specialtoken-10freezed:v0",
+        folder:""}
+    SEP_10F = {code_type : ControlCodeType.SEPARATOR, 
+        name: "SEP_10F",  
+        url:"polito_aiml2021_textgen/uncategorized/gpt2-TRUE_separators-10freezed:v0",
+        folder:""}
+    D_ST = {code_type : ControlCodeType.SPECIAL_TOKEN, 
+        name: "D_ST", 
+        url:"polito_aiml2021_textgen/distilgpt2-specialtoken/model-3b1lzdro:v0",
+        folder:"" }
+
+def __str__(self):
+        return self.value.name
 
 """ input, 
       max_len, num_return_sequences=3,
@@ -9,8 +35,9 @@ from src.generation import *
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--model_dir', type=str, required=False,
+parser.add_argument('--model', type=Models, required=True, choices=list(Models),
                                         help='location of model checkpoint')
+
 
 parser.add_argument('--input', type=str, default= "<|startoftext|>",
                                         help='The start of the sequence(s) the model will generate')
@@ -31,24 +58,20 @@ parser.add_argument('--top_p', type=int, default=0.7,
 
 parser.add_argument('--control_codes',type=str, default="",
                                         help='Control codes to be used during generation separated by ", "' )
-parser.add_argument('--control_codes_type',type=ControlCodeType,
-                                        help='Control codes type', choices=list(ControlCodeType) )
 
 parser.add_argument('--num_returned_sequences',type=int,default=3,
                                         help='the number of sentences the model will generate' )
 
 args = parser.parse_args()
 
-artifact_dir = args.model_dir
+artifact_dir = args.model.folder
 
-if artifact_dir is None or not os.path.isdir(artifact_dir):
-    artifact_dir = "./artifacts/model-3152aoah-v0"
-    if not os.path.isdir("./artifacts/model-3152aoah:v0"): 
-        os.environ["WANDB_API_KEY"] = "92907f006616f5c5d84bf6f28f4ab8f6220b5ea1"
-        import wandb
-        run = wandb.init()
-        artifact = run.use_artifact('polito_aiml2021_textgen/dstilgpt2-specialtoken/model-3152aoah:v0', type='model')
-        artifact_dir = artifact.download()
+if not os.path.isdir(artifact_dir):
+    os.environ["WANDB_API_KEY"] = "92907f006616f5c5d84bf6f28f4ab8f6220b5ea1"
+    import wandb
+    run = wandb.init()
+    artifact = run.use_artifact(args.model.url, type='model')
+    artifact_dir = artifact.download()
 
 
 
