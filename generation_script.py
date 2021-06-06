@@ -2,6 +2,7 @@ import argparse
 import os
 from src.generation import *
 from enum import Enum
+import sys
 
 MODELS = {
     "ST" : {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
@@ -28,8 +29,8 @@ parser.add_argument('--model', type=str, required=True, choices=list(MODELS.keys
                                         help='Model to use for generation')
 
 
-parser.add_argument('--input', type=str, default= "<|startoftext|>",
-                                        help='The start of the sequence(s) the model will generate')
+parser.add_argument('--input', type=str,
+                        help= 'The start of the sequence(s) the model will generate')
 
 parser.add_argument('--max_len', type=int, default=16,
                                         help='number of tokens to generate')
@@ -45,7 +46,7 @@ parser.add_argument('--repetition_penalty', type=float, default=2.0,
 parser.add_argument('--top_p', type=int, default=0.7,
                                         help='print top-n candidates during generations; defaults to 0 which is no printing')                                  
 
-parser.add_argument('--control_codes',type=str, default="",
+parser.add_argument('--control_codes', type=str, default="",
                                         help='Control codes to be used during generation separated by ", "' )
 
 parser.add_argument('--num_returned_sequences',type=int,default=3,
@@ -56,6 +57,10 @@ args = parser.parse_args()
 model_name = args.model
 model_obj = MODELS[model_name]
 artifact_dir = model_obj['folder']
+
+if not args.input.strip() and args.model != "SEP":
+    print("Empty input is allowed only on SEP model.")
+    sys.exit()
 
 if not os.path.isdir(artifact_dir):
     os.environ["WANDB_API_KEY"] = "92907f006616f5c5d84bf6f28f4ab8f6220b5ea1"
@@ -68,12 +73,9 @@ if not os.path.isdir(artifact_dir):
 
 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 
-print("Loading model...")
 model = GPT2LMHeadModel.from_pretrained(artifact_dir).cuda()
-print("Model loaded!")
-print("Loading tokenizer...")
 tokenizer = GPT2TokenizerFast.from_pretrained(artifact_dir)
-print("Tokenizer loaded!")
+
 
 generator = Generator(model,tokenizer)
 
