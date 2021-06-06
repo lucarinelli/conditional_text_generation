@@ -58,9 +58,12 @@ model_name = args.model
 model_obj = MODELS[model_name]
 artifact_dir = model_obj['folder']
 
-if not args.input.strip() and args.model != "SEP":
-    print("Empty input is allowed only on SEP model.")
-    sys.exit()
+if not args.input.strip():
+    if args.model != "SEP":
+        print("Empty input is allowed only on SEP model.")
+        sys.exit()
+    else : 
+        args.input = "<|startoftext|>"
 
 if not os.path.isdir(artifact_dir):
     os.environ["WANDB_API_KEY"] = "92907f006616f5c5d84bf6f28f4ab8f6220b5ea1"
