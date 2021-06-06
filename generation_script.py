@@ -18,15 +18,15 @@ parser.add_argument('--input', type=str, default= "<|startoftext|>",
 parser.add_argument('--max_len', type=int, default=16,
                                         help='number of tokens to generate')
 
-parser.add_argument('--temperature', type=float, default=0,
+parser.add_argument('--temperature', type=float, default=0.9,
                                         help='temperature for sampling distribution; 0 means greedy')
 
-parser.add_argument('--top_k', type=int, default=0,
+parser.add_argument('--top_k', type=int, default=30,
                                         help='topk value for sampling from the softmax distribution ; 0 means no topk preferred')
 
-parser.add_argument('--repetition_penalty', type=float, default=1.2,
+parser.add_argument('--repetition_penalty', type=float, default=2.0,
                                         help='repetition penalty for greedy sampling')
-parser.add_argument('--top_p', type=int, default=0,
+parser.add_argument('--top_p', type=int, default=0.7,
                                         help='print top-n candidates during generations; defaults to 0 which is no printing')                                  
 
 parser.add_argument('--control_codes',type=str, default="",
