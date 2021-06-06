@@ -20,7 +20,7 @@ class Models(Enum):
         "name": "SEP_10F",  
         "url":"polito_aiml2021_textgen/uncategorized/gpt2-TRUE_separators-10freezed:v0",
         "folder": ""}
-    D_ST = {code_type : ControlCodeType.SPECIAL_TOKEN, 
+    D_ST = {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
         "name": "D_ST", 
         "url":"polito_aiml2021_textgen/distilgpt2-specialtoken/model-3b1lzdro:v0",
         "folder": "" }
