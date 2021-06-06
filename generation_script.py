@@ -5,36 +5,27 @@ from enum import Enum
 
 MODELS = {
     "ST" : {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
-        "name": "ST", 
         "url":  "polito_aiml2021_textgen/uncategorized/gpt2-specialtoken:v1",
         "folder" : "./artifacts/gpt2-specialtoken-v1"},
     "SEP" : {"code_type": ControlCodeType.SEPARATOR, 
-        "name" : "SEP" ,
         "url":"polito_aiml2021_textgen/gpt2-separators/model-8p9purad:v0",
         "folder": "./artifacts/model-8p9purad-v0" },
     "ST_10F" : {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
-        "name": "ST_10F", 
         "url":"polito_aiml2021_textgen/uncategorized/gpt2-specialtoken-10freezed:v0",
         "folder": "./artifacts/gpt2-specialtoken-10freezed-v0"},
     "SEP_10F" : {"code_type" : ControlCodeType.SEPARATOR, 
-        "name": "SEP_10F",  
         "url":"polito_aiml2021_textgen/uncategorized/gpt2-TRUE_separators-10freezed:v0",
         "folder": "./artifacts/gpt2-TRUE_separators-10freezed-v0"},
     "D_ST" : {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
-        "name": "D_ST", 
         "url":"polito_aiml2021_textgen/distilgpt2-specialtoken/model-3b1lzdro:v0",
         "folder": "./artifacts/model-3b1lzdro-v0" }
 }
 
-""" input, 
-      max_len, num_return_sequences=3,
-      top_k=30, top_p=0.7, 
-      temperature=0.9, repetition_penalty=2.0): """
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--model', type=str, required=True, choices=list(MODELS.keys()),
-                                        help='location of model checkpoint')
+                                        help='Model to use for generation')
 
 
 parser.add_argument('--input', type=str, default= "<|startoftext|>",
@@ -88,6 +79,6 @@ generator = Generator(model,tokenizer)
 
 control_codes = args.control_codes.split(", ")
 
-generator.generate(control_codes, args.args.model["code_type"], args.input, args.max_len,
+generator.generate(control_codes, args.model["code_type"], args.input, args.max_len,
                     args.num_returned_sequences, args.top_k, args.top_p, args.temperature, 
                     args.repetition_penalty )
