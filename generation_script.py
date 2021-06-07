@@ -19,7 +19,10 @@ MODELS = {
         "folder": "./artifacts/gpt2-TRUE_separators-10freezed-v0"},
     "D_ST" : {"code_type" : ControlCodeType.SPECIAL_TOKEN, 
         "url":"polito_aiml2021_textgen/distilgpt2-specialtoken/model-3b1lzdro:v0",
-        "folder": "./artifacts/model-3b1lzdro-v0" }
+        "folder": "./artifacts/model-3b1lzdro-v0" },
+    "T_ST": {"code_type": ControlCodeType.SPECIAL_TOKEN,
+            "url": "polito_aiml2021_textgen/tiny_gpt2/tiny-gpt2:v0",
+            "folder": "./artifacts/tiny-gpt2-v0"}
 }
 
 
@@ -58,7 +61,8 @@ model_name = args.model
 model_obj = MODELS[model_name]
 artifact_dir = model_obj['folder']
 
-if not args.input.strip():
+
+if not args.input or not args.input.strip():
     if args.model != "SEP":
         print("Empty input is allowed only on SEP model.")
         sys.exit()
