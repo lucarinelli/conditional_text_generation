@@ -20,13 +20,16 @@ class Generator():
       top_k=30, top_p=0.7, 
       temperature=0.9, repetition_penalty=2.0):
 
+
     joiner = None
     if type == ControlCodeType.SEPARATOR:
         joiner = ", "
     else:
         joiner = ""
         control_codes = list(map(lambda x: "<CTRL:"+x+">", control_codes))
-    
+
+    control_codes = sorted(control_codes)
+
     ctrl = joiner.join(control_codes)
     prompt = ctrl + input
             
