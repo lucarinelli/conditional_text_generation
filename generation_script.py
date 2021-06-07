@@ -32,7 +32,7 @@ parser.add_argument('--model', type=str, required=True, choices=list(MODELS.keys
                                         help='Model to use for generation')
 
 
-parser.add_argument('--input', type=str,
+parser.add_argument('--input', type=str, default="",
                         help= 'The start of the sequence(s) the model will generate')
 
 parser.add_argument('--max_len', type=int, default=16,
