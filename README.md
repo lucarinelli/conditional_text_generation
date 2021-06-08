@@ -20,7 +20,7 @@ Where:
   -  **D-T** is Distil-GPT-2 using control codes (_6 layers_);
   -  **T-ST** is Tiny-GPT-2 using control codes (_2 layers_);
   -  **ST-0** is GPT-2 using control codes and trained from scratch (_12 layers_);
-- **INPUT** is the sequence the model will start generating from. Note that empty inputs are only allowed on _SEP_ models, for further details, please refer to the _Tokenizer_ section of the paper.
+- **INPUT** is the sequence the model will start generating from. Note that empty inputs are only allowed on _SEP_ and _SP-0_, for further details, please refer to the _Tokenizer_ section of the paper.
 - **CONTROL CODES** is a list (possibly empty) of control codes to influence the text genration. For better results it is suggested to use one (or more) of the following: <br></br>
  ['kitchen', 'food', 'animal', 'furniture', 'indoor', 'accessory', 'person', 'vehicle', 'outdoor', 'sports', 'appliance', 'electronic']
 - **MAX_LEN**  (_int_, optional, defaults to _16_) is the maximum number of tokens (words) the model will generate, including the input text.
