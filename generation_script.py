@@ -61,8 +61,9 @@ model_name = args.model
 model_obj = MODELS[model_name]
 artifact_dir = model_obj['folder']
 
+args.input = args.input.strip()
 
-if not args.input or not args.input.strip():
+if not args.input or args.input == "<|startoftext|>":
     if args.model != "SEP":
         print("Empty input is allowed only on SEP model.")
         sys.exit()
