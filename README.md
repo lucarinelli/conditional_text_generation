@@ -15,9 +15,9 @@ Where:
 - **MODEL** is one of [ST,SEP,ST-10F,SEP-10F,D-ST,T-ST,ST-0] where:
   -  **ST** is GPT-2 using control codes (_12 layers_);
   -  **SEP** is GPT-2 using serparators (_12 layers_);
-  -  **ST_F10** is GPT-2 using control codes with 10 layers freezed (_12 layers_);
-  -  **SEP_F10** is GPT-2 using separators with the first 10 layers freezed (_12 layers_);
-  -  **D_ST** is Distil-GPT-2 using control codes (_6 layers_);
+  -  **ST-10** is GPT-2 using control codes with 10 layers freezed (_12 layers_);
+  -  **SEP-10** is GPT-2 using separators with the first 10 layers freezed (_12 layers_);
+  -  **D-T** is Distil-GPT-2 using control codes (_6 layers_);
   -  **T-ST** is Tiny-GPT-2 using control codes (_2 layers_);
   -  **ST-0** is GPT-2 using control codes and trained from scratch (_12 layers_);
 - **INPUT** is the sequence the model will start generating from. Note that empty inputs are only allowed on _SEP_ models, for further details, please refer to the _Tokenizer_ section of the paper.
