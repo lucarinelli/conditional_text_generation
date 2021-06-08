@@ -81,7 +81,11 @@ if not os.path.isdir(artifact_dir):
 
 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 
-model = GPT2LMHeadModel.from_pretrained(artifact_dir).cuda()
+model = GPT2LMHeadModel.from_pretrained(artifact_dir)
+
+if torch.cuda.is_available():
+      model = model.cuda()
+
 tokenizer = GPT2TokenizerFast.from_pretrained(artifact_dir)
 
 
