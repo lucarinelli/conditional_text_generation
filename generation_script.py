@@ -22,7 +22,10 @@ MODELS = {
         "folder": "./artifacts/model-3b1lzdro-v0" },
     "T_ST": {"code_type": ControlCodeType.SPECIAL_TOKEN,
             "url": "polito_aiml2021_textgen/tiny_gpt2/tiny-gpt2:v0",
-            "folder": "./artifacts/tiny-gpt2-v0"}
+            "folder": "./artifacts/tiny-gpt2-v0"},
+    "ST_0": {"code_type": ControlCodeType.SPECIAL_TOKEN,
+            "url": "polito_aiml2021_textgen/gpt2-no-pretrain10/model-3kig3v2k:v0",
+            "folder": "./artifacts/model-3kig3v2k-v0"}
 }
 
 
