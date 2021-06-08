@@ -12,12 +12,14 @@ To execute the generation script, run the following command:
 
 `python ./generation_script.py --model MODEL --input INPUT --control_codes CONTROL_CODES --max_len MAX_LEN --temperature TEMPERATURE --top_k TOP_K --repetition_penalty REPETITION_PENALTY --top_p TOP_P --num_returned_sequences NUM_RETURNED_SEQUENCES`
 Where:
-- **MODEL** is one of [ST,SEP,ST_10F,SEP_10F,D_ST] where:
+- **MODEL** is one of [ST,SEP,ST-10F,SEP-10F,D-ST,T-ST,ST-0] where:
   -  **ST** is GPT-2 using control codes (_12 layers_);
   -  **SEP** is GPT-2 using serparators (_12 layers_);
   -  **ST_F10** is GPT-2 using control codes with 10 layers freezed (_12 layers_);
   -  **SEP_F10** is GPT-2 using separators with the first 10 layers freezed (_12 layers_);
   -  **D_ST** is Distil-GPT-2 using control codes (_6 layers_);
+  -  **T-ST** is Tiny-GPT-2 using control codes (_2 layers_);
+  -  **ST-0** is GPT-2 using control codes and trained from scratch (_12 layers_);
 - **INPUT** is the sequence the model will start generating from. Note that empty inputs are only allowed on _SEP_ models, for further details, please refer to the _Tokenizer_ section of the paper.
 - **CONTROL CODES** is a list (possibly empty) of control codes to influence the text genration. For better results it is suggested to use one (or more) of the following: <br></br>
  ['kitchen', 'food', 'animal', 'furniture', 'indoor', 'accessory', 'person', 'vehicle', 'outdoor', 'sports', 'appliance', 'electronic']
